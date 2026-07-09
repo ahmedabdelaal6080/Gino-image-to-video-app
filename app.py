@@ -1,34 +1,62 @@
 import streamlit as st
+import fal_client
+import os
 
 # إعدادات الصفحة
-st.set_page_config(page_title="AI Image to Video Maker", layout="centered")
+st.set_page_config(page_title="صانع الفيديوهات بالذكاء الاصطناعي", layout="centered")
 
-# عنوان الموقع
 st.title("🎬 صانع الفيديوهات بالذكاء الاصطناعي")
-st.write("حول صورك إلى فيديوهات إبداعية في ثوانٍ معدودة!")
+st.write("حوّل صورك إلى فيديوهات إبداعية في ثوانٍ معدودة.")
 
-st.divider()
+# التأكد من وجود المفتاح السري
+if "FAL_KEY" in st.secrets:
+    os.environ["FAL_KEY"] = st.secrets["FAL_KEY"]
+else:
+    st.error("رجاءً قم بإضافة FAL_KEY في إعدادات Secrets أولاً.")
 
-# الجزء الخاص برفع الصورة
-st.subheader("1️⃣ ارفع صورتك هنا")
-uploaded_file = st.file_uploader("اختار صورة بصيغة PNG أو JPG...", type=["jpg", "jpeg", "png"])
+# رفع الصورة
+uploaded_file = st.file_uploader("1️⃣ ارفع صورتك هنا", type=["jpg", "jpeg", "png"])
 
-if uploaded_file is not None:
-    # عرض الصورة للمستخدم بعد الرفع
+if uploaded_file:
     st.image(uploaded_file, caption="الصورة التي تم رفعها", use_container_width=True)
 
-st.divider()
+# كتابة الوصف
+prompt = st.text_area("2️⃣ اكتب ماذا تريد أن يحدث في الفيديو (Prompt)", placeholder="مثال: A majestic dragon flying over mountains...")
 
-# الجزء الخاص بكتابة الوصف
-st.subheader("2️⃣ اكتب ماذا تريد أن يحدث في الفيديو (Prompt)")
-prompt = st.text_area("اكتب الوصف بالإنجليزي لأفضل نتائج (مثلاً: A majestic dragon flying over mountains)...")
-
-st.divider()
-
-# زر التشغيل
+# زرار التوليد الفعلي
 if st.button("🚀 توليد الفيديو الآن", type="primary"):
-    if uploaded_file is not None and prompt != "":
-        with st.spinner("جاري تهيئة التصميم... (شكل الموقع المبدئي جاهز)"):
-            st.info("ممتاز! الواجهة شغال تمام. في الخطوة الجاية هنربط الـ API عشان الفيديو يشتغل بجد.")
+    if not uploaded_file:
+        st.warning("الرجاء رفع صورة أولاً!")
+    elif not prompt:
+        st.warning("الرجاء كتابة وصف للفيديو!")
     else:
-        st.warning("من فضلك ارفع صورة واكتب الوصف أولاً!")
+        with st.spinner("⏳ جاري توليد الفيديو... قد يستغرق الأمر دقيقة، يرجى الانتظار."):
+            try:
+                # حفظ الصورة مؤقتاً لإرسالها للـ API
+                with open("temp_image.png", "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                
+                # رفع الصورة مؤقتاً لـ fal
+                image_url = fal_client.upload_file("temp_image.png")
+                
+                # استدعاء موديل توليد الفيديو (Luma Dream Machine)
+                result = fal_client.subscribe(
+                    "fal-ai/luma-dream-machine/image-to-video",
+                    max_concurrency=10,
+                    arguments={
+                        "image_url": image_url,
+                        "prompt": prompt
+                    }
+                )
+                
+                # عرض الفيديو الناتج
+                video_url = result['video']['url']
+                st.success("✨ تم توليد الفيديو بنجاح!")
+                st.video(video_url)
+                
+                # مسح الملف المؤقت
+                if os.path.exists("temp_image.png"):
+                    os.remove("temp_image.png")
+                    
+            except Exception as e:
+                st.error(f"حدث خطأ أثناء التوليد: {str(e)}")
