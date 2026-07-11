@@ -34,8 +34,8 @@ if st.button("🚀 توليد الفيديو الآن", type="primary"):
     else:
         with st.spinner("⏳ جاري إرسال الصورة للسيرفر وتوليد الفيديو الحقيقي... قد يستغرق دقيقة..."):
             try:
-                # رابط الموديل المجاني لتوليد الفيديو من الصورة
-               API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-video-diffusion-img2vid-xt"
+                # الرابط والمفتاح بالمسافات الصحيحة تماماً لبايثون
+                API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-video-diffusion-img2vid-xt"
                 headers = {"Authorization": f"Bearer {hf_token}"}
                 
                 # إرسال الصورة للموديل
