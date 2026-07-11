@@ -1,22 +1,29 @@
 import streamlit as st
 import requests
-import os
 import time
 
 # إعدادات الصفحة
-st.set_page_config(page_title="صانع الفيديوهات المجاني", layout="centered")
+st.set_page_config(page_title="صانع الفيديوهات الذكي", layout="centered")
 
-st.title("🎬 صانع الفيديوهات بالذكاء الاصطناعي (مجاني تماماً)")
-st.write("حوّل صورك إلى فيديوهات إبداعية بدون أي مفاتيح أو اشتراكات.")
+st.title("🎬 صانع الفيديوهات بالذكاء الاصطناعي")
+st.write("تحويل صورتك إلى فيديو حقيقي وحركي مجاناً.")
+
+# الحصول على المفتاح من الـ Secrets
+hf_token = st.secrets.get("HF_TOKEN")
+
+if not hf_token:
+    st.error("⚠️ يرجى إضافة مفتاح HF_TOKEN في الـ Secrets أولاً.")
+    st.stop()
 
 # رفع الصورة
 uploaded_file = st.file_uploader("1️⃣ ارفع صورتك هنا", type=["jpg", "jpeg", "png"])
 
 if uploaded_file:
-    st.image(uploaded_file, caption="الصورة التي تم رفعها", use_container_width=True)
+    image_bytes = uploaded_file.read()
+    st.image(image_bytes, caption="الصورة التي تم رفعها", use_container_width=True)
 
 # كتابة الوصف
-prompt = st.text_area("2️⃣ اكتب ماذا تريد أن يحدث في الفيديو (Prompt)", placeholder="مثال: A dragon flying...")
+prompt = st.text_area("2️⃣ اكتب ماذا تريد أن يحدث في الفيديو (Prompt)", placeholder="مثال: Make the person blink and smile")
 
 # زرار التوليد
 if st.button("🚀 توليد الفيديو الآن", type="primary"):
@@ -25,18 +32,22 @@ if st.button("🚀 توليد الفيديو الآن", type="primary"):
     elif not prompt:
         st.warning("الرجاء كتابة وصف للفيديو!")
     else:
-        with st.spinner("⏳ جاري الاتصال بالسيرفر المجاني وتوليد الفيديو... يرجى الانتظار"):
+        with st.spinner("⏳ جاري إرسال الصورة للسيرفر وتوليد الفيديو الحقيقي... قد يستغرق دقيقة..."):
             try:
-                # هنا بنستخدم سيرفر مجاني مفتوح من Hugging Face لتوليد الفيديو مباشرة
-                # بنرسل الصورة والوصف لموديل I2VGen-XL أو موديل مشابه مجاني
+                # رابط الموديل المجاني لتوليد الفيديو من الصورة
+                API_URL = "https://api-inference.huggingface.co/models/StabilityAI/stable-video-diffusion-img2vid-xt"
+                headers = {"Authorization": f"Bearer {hf_token}"}
                 
-                # كود وهمي يحاكي عملية الـ API المجانية المباشرة
-                time.sleep(5) # محاكاة وقت التوليد
+                # إرسال الصورة للموديل
+                response = requests.post(API_URL, headers=headers, data=image_bytes)
                 
-                # هنا بنعرض فيديو تجريبي ناتج كمثال لنجاح العملية بدون تشفير 
-                # (تقدر تبدلها برابط الـ Space المجاني اللي مبيطلبش مفتاح)
-                st.success("✨ تم توليد الفيديو بنجاح!")
-                st.video("https://www.w3schools.com/html/mov_bbb.mp4") 
-                
+                if response.status_code == 200:
+                    st.success("✨ تم توليد الفيديو الحقيقي بنجاح!")
+                    st.video(response.content)
+                elif response.status_code == 503:
+                    st.info("⏳ السيرفر المجاني بيحمل الموديل حالياً (بياخد حوالي دقيقة)، استنى ثواني واضغط على الزرار تاني.")
+                else:
+                    st.error(f"حدث خطأ في السيرفر: {response.status_code}")
+                    
             except Exception as e:
-                st.error(f"السيرفر المجاني مشغول حالياً، يرجى المحاولة مرة أخرى: {str(e)}")
+                st.error(f"عذراً، حدث خطأ أثناء الاتصال: {str(e)}")
