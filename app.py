@@ -3,10 +3,10 @@ import requests
 import time
 
 # إعدادات الصفحة
-st.set_page_config(page_title="صانع الفيديوهات الذكي", layout="centered")
+st.set_page_config(page_title="صانع الفيديوهات السريع", layout="centered")
 
 st.title("🎬 صانع الفيديوهات بالذكاء الاصطناعي")
-st.write("تحويل صورتك إلى فيديو حقيقي وحركي مجاناً.")
+st.write("اكتب وصفاً ليتحول إلى فيديو حقيقي وحركي مجاناً.")
 
 # الحصول على المفتاح من الـ Secrets
 hf_token = st.secrets.get("HF_TOKEN")
@@ -15,39 +15,30 @@ if not hf_token:
     st.error("⚠️ يرجى إضافة مفتاح HF_TOKEN في الـ Secrets أولاً.")
     st.stop()
 
-# رفع الصورة
-uploaded_file = st.file_uploader("1️⃣ ارفع صورتك هنا", type=["jpg", "jpeg", "png"])
-
-if uploaded_file:
-    image_bytes = uploaded_file.read()
-    st.image(image_bytes, caption="الصورة التي تم رفعها", use_container_width=True)
-
 # كتابة الوصف
-prompt = st.text_area("2️⃣ اكتب ماذا تريد أن يحدث في الفيديو (Prompt)", placeholder="مثال: Make the person blink and smile")
+prompt = st.text_area("1️⃣ اكتب وصفاً للفيديو الذي تريده بالإنجليزية (Prompt)", placeholder="مثال: A cute cat playing with a ball, high quality")
 
 # زرار التوليد
 if st.button("🚀 توليد الفيديو الآن", type="primary"):
-    if not uploaded_file:
-        st.warning("الرجاء رفع صورة أولاً!")
-    elif not prompt:
-        st.warning("الرجاء كتابة وصف للفيديو!")
+    if not prompt:
+        st.warning("الرجاء كتابة وصف للفيديو أولاً!")
     else:
-        with st.spinner("⏳ جاري إرسال الصورة للسيرفر وتوليد الفيديو الحقيقي... قد يستغرق دقيقة..."):
+        with st.spinner("⏳ جاري الاتصال بالسيرفر وتوليد فيديو حقيقي من وصفك... يرجى الانتظار دقيقة..."):
             try:
-                # الرابط والمفتاح بالمسافات الصحيحة تماماً لبايثون
-                API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-video-diffusion-img2vid-xt"
+                # استخدام موديل نص إلى فيديو مستقر ومفتوح دايماً في الـ API المجاني
+                API_URL = "https://api-inference.huggingface.co/models/damo-vilab/modelscope-damo-text-to-video-hd"
                 headers = {"Authorization": f"Bearer {hf_token}"}
                 
-                # إرسال الصورة للموديل
-                response = requests.post(API_URL, headers=headers, data=image_bytes)
+                # إرسال الوصف
+                response = requests.post(API_URL, headers=headers, json={"inputs": prompt})
                 
                 if response.status_code == 200:
-                    st.success("✨ تم توليد الفيديو الحقيقي بنجاح!")
+                    st.success("✨ تم توليد الفيديو بنجاح!")
                     st.video(response.content)
                 elif response.status_code == 503:
-                    st.info("⏳ السيرفر المجاني بيحمل الموديل حالياً (بياخد حوالي دقيقة)، استنى ثواني واضغط على الزرار تاني.")
+                    st.info("⏳ السيرفر بيحمل الموديل حالياً (بياخد حوالي دقيقة)، استنى شوية واضغط على الزرار تاني.")
                 else:
-                    st.error(f"حدث خطأ في السيرفر: {response.status_code}")
+                    st.error(f"حدث خطأ في السيرفر: {response.status_code}. قد يكون الموديل مشغولاً حالياً.")
                     
             except Exception as e:
                 st.error(f"عذراً، حدث خطأ أثناء الاتصال: {str(e)}")
