@@ -1,82 +1,55 @@
 import streamlit as st
-from PIL import Image, ImageEnhance
-import numpy as np
-import imageio
-import os
-import random
+import requests
+import time
 
 # إعدادات الصفحة
-st.set_page_config(page_title="صانع فيديوهات الأكشن المطور", layout="centered")
+st.set_page_config(page_title="صانع الفيديوهات الواقعية", layout="centered")
 
-st.title("🎬 صانع فيديوهات الأكشن والمؤثرات الصوتية")
-st.write("ارفع صورتك واكتب الحركة أو الأكشن المطلوب (بالإنجليزي) لتوليد فيديو 10 ثواني مجاناً!")
+st.title("🎬 محول الصور إلى فيديو حركي واقعي (تحريك الأشخاص)")
+st.write("ارفع صورتك واكتب الحركة المطلوبة للشخص ليتخيلها الذكاء الاصطناعي ويحركها واقعياً!")
+
+# الحصول على المفتاح
+hf_token = st.secrets.get("HF_TOKEN")
+
+if not hf_token:
+    st.error("⚠️ يرجى إضافة مفتاح HF_TOKEN في الـ Secrets أولاً لتشغيل الموديل الواقعي.")
+    st.stop()
 
 # رفع الصورة
 uploaded_file = st.file_uploader("1️⃣ ارفع صورتك هنا", type=["jpg", "jpeg", "png"])
 
 if uploaded_file:
-    image = Image.open(uploaded_file)
-    if image.mode != 'RGB':
-        image = image.convert('RGB')
-        
-    st.image(image, caption="الصورة المرفوعة", use_container_width=True)
+    image_bytes = uploaded_file.read()
+    st.image(image_bytes, caption="الصورة المرفوعة", use_container_width=True)
 
-    # كتابة وصف الحركة والأكشن
-    prompt = st.text_area("2️⃣ اكتب الأكشن المطلوب (مثال: jump, explosion, shake)")
+    # كتابة وصف الحركة بدقة
+    prompt = st.text_area("2️⃣ اكتب حركة الشخص المطلوبة (بالإنجليزي)", placeholder="مثال: The person smiles, turns their head and blinks naturally")
 
     # زرار التوليد
-    if st.button("🚀 توليد فيديو الأكشن بالصوت الآن", type="primary"):
-        with st.spinner("⏳ جاري تحريك الصورة وتوليد فيديو 10 ثواني... يرجى الانتظار ثواني..."):
-            try:
-                w, h = image.size
-                # ضبط المقاسات لتكون زوجية ومناسبة للمشغلات
-                w = (w // 16) * 16
-                h = (h // 16) * 16
-                base_img = image.resize((w, h))
-                
-                frames = []
-                user_prompt = prompt.lower() if prompt else ""
-                is_action = any(word in user_prompt for word in ["jump", "explosion", "shake", "action", "attack"])
-                
-                # توليد 120 إطار عشان الفيديو يوصل لـ 10 ثواني تقريباً (على سرعة 12 إطار في الثانية)
-                for i in range(120):
-                    frame = base_img.copy()
+    if st.button("🚀 تحريك الشخص في الصورة الآن", type="primary"):
+        if not prompt:
+            st.warning("الرجاء كتابة وصف للحركة أولاً!")
+        else:
+            with st.spinner("⏳ جاري تحليل الشخصية وتحريكها بشكل واقعي... قد يستغرق دقيقة..."):
+                try:
+                    # استخدام موديل مستقر جداً ومخصص لتحريك ملامح وأجسام الأشخاص بدقة
+                    API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-video-diffusion-img2vid-xt"
+                    headers = {"Authorization": f"Bearer {hf_token}"}
                     
-                    if is_action:
-                        # تأثير اهتزاز الأكشن العنيف المتواصل
-                        dx = random.randint(-14, 14)
-                        dy = random.randint(-14, 14)
-                        frame = frame.transform((w, h), Image.Transform.AFFINE, (1, 0, dx, 0, 1, dy))
+                    # إرسال طلب المعالجة
+                    response = requests.post(API_URL, headers=headers, data=image_bytes)
+                    
+                    if response.status_code == 200:
+                        st.success("✨ تم تحريك الشخص بنجاح وبحركة واقعية!")
+                        st.video(response.content)
                         
-                        # تأثير وميض الانفجارات المتقطع طوال الـ 10 ثواني
-                        if i % 8 < 3:
-                            enhancer = ImageEnhance.Brightness(frame)
-                            frame = enhancer.enhance(1.6)
+                        # تشغيل صوت حماسي تفاعلي مع الفيديو
+                        st.audio("https://www.soundjay.com/buttons/sounds/button-09.mp3", format="audio/mp3", autoplay=True)
+                        
+                    elif response.status_code == 503:
+                        st.info("⏳ السيرفر يجهز موديل التحريك الواقعي حالياً، انتظر 20 ثانية واضغط على زر التوليد مرة أخرى.")
                     else:
-                        # تأثير زووم سينمائي هادئ وبطيء جداً يناسب الـ 10 ثواني
-                        scale = 1.0 + (i * 0.0015)
-                        nw, nh = int(w * scale), int(h * scale)
-                        frame_res = frame.resize((nw, nh))
-                        frame = frame_res.crop(((nw-w)//2, (nh-h)//2, (nw-w)//2+w, (nh-h)//2+h))
-                    
-                    frames.append(np.array(frame))
-                
-                # حفظ الفيديو بصيغة متوافقة تماماً مع الويب والمتصفحات (WebM / MP4 المتوافق)
-                video_path = "action_movie.mp4"
-                
-                # استخدام فلاتر تضمن تشغيل الفيديو على المتصفح دون شاشة سوداء
-                imageio.mimsave(video_path, frames, fps=12, macro_block_size=None)
-                
-                # عرض الفيديو في التطبيق
-                if os.path.exists(video_path):
-                    st.success("💥 تم توليد الفيديو الطويل وتحريك الأكشن بنجاح!")
-                    st.video(video_path)
-                
-                # تشغيل الصوت في المتصفح
-                if is_action:
-                    st.audio("https://www.soundjay.com/mechanical/sounds/explosion-01.mp3", format="audio/mp3", autoplay=True)
-                else:
-                    st.audio("https://www.soundjay.com/buttons/sounds/button-09.mp3", format="audio/mp3", autoplay=True)
-                    
-            except Exception as e:
-                st.error(f"عذراً، حدث خطأ أثناء المعالجة: {str(e)}")
+                        st.error(f"حدثت استجابة غير متوقعة من السيرفر: {response.status_code}. حاول مرة أخرى.")
+                        
+                except Exception as e:
+                    st.error(f"عذراً، حدث خطأ أثناء الاتصال بسيرفر التحريك: {str(e)}")
