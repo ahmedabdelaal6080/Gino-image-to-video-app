@@ -16,7 +16,9 @@ uploaded_file = st.file_uploader("1️⃣ ارفع صورتك هنا", type=["jp
 
 if uploaded_file:
     image = Image.open(uploaded_file)
-    st.image(image, caption="الصورة المرفوعة", use_container_width=True)    # كتابة وصف الحركة والأكشن
+    st.image(image, caption="الصورة المرفوعة", use_container_width=True)
+
+    # كتابة وصف الحركة والأكشن
     prompt = st.text_area("2️⃣ اكتب الأكشن المطلوب (مثال: jump, explosion, shake, attack)", placeholder="اكتب هنا...")
 
     # زرار التوليد
