@@ -1,2 +1,6 @@
-requests
 streamlit
+fal-client
+imageio
+imageio-ffmpeg
+pillow
+numpy
