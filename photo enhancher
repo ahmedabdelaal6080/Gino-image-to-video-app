@@ -45,7 +45,7 @@
         }
         iframe {
             width: 100%;
-            height: 750px;
+            height: 850px;
             border: none;
             border-radius: 10px;
         }
@@ -64,8 +64,8 @@
     </header>
 
     <div class="main-card">
-        <!-- أداة الذكاء الاصطناعي التلقائية -->
-        <iframe src="https://sczhou-codeformer.hf.space"></iframe>
+        <!-- أداة CodeFormer المستقرة بدون حاجة لـ API -->
+        <iframe src="https://sczhou-codeformer.hf.space?__theme=dark"></iframe>
     </div>
 
     <footer>
