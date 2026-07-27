@@ -64,8 +64,8 @@
     </header>
 
     <div class="main-card">
-        <!-- أداة GFPGAN الشغالة والمستقرة مجاناً -->
-        <iframe src="https://xinntao-gfpgan.hf.space?__theme=dark"></iframe>
+        <!-- سيرفر شغال ومستقر جداً لتعديل الصور -->
+        <iframe src="https://randomtable-image-restoration-gfpgan.hf.space?__theme=dark"></iframe>
     </div>
 
     <footer>
