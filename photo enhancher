@@ -3,74 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محسن الصور القديمة | توضيح وزيادة جودة الصور مجاناً</title>
+    <title>محسن الصور القديمة بالذكاء الاصطناعي</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            min-height: 100vh;
-        }
-        header {
-            text-align: center;
-            margin-bottom: 25px;
-            margin-top: 10px;
-        }
-        h1 {
-            font-size: 2.2rem;
-            color: #38bdf8;
-            margin-bottom: 10px;
-        }
-        p {
-            color: #94a3b8;
-            font-size: 1.1rem;
-        }
-        .main-card {
-            width: 100%;
-            max-width: 950px;
-            background: #1e293b;
-            border-radius: 16px;
-            padding: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            border: 1px solid #334155;
-        }
-        iframe {
-            width: 100%;
-            height: 850px;
-            border: none;
-            border-radius: 10px;
-        }
-        footer {
-            margin-top: 30px;
-            color: #64748b;
-            font-size: 0.9rem;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; padding: 20px; min-height: 100vh; }
+        header { text-align: center; margin-bottom: 25px; margin-top: 10px; }
+        h1 { font-size: 2.2rem; color: #38bdf8; margin-bottom: 10px; }
+        p { color: #94a3b8; font-size: 1.1rem; }
+        .card { width: 100%; max-width: 650px; background: #1e293b; border-radius: 16px; padding: 25px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); border: 1px solid #334155; text-align: center; }
+        input[type="file"] { display: none; }
+        .upload-btn { display: inline-block; background: #0284c7; color: white; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 20px; transition: background 0.3s; }
+        .upload-btn:hover { background: #0369a1; }
+        .preview-container { display: flex; justify-content: space-around; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
+        .box { flex: 1; min-width: 250px; background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155; }
+        .box h3 { color: #38bdf8; margin-bottom: 10px; font-size: 1rem; }
+        img { max-width: 100%; height: auto; border-radius: 6px; max-height: 300px; }
+        #loading { display: none; color: #38bdf8; margin: 15px 0; font-weight: bold; }
+        footer { margin-top: 30px; color: #64748b; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>توضيح وترميم الصور القديمة مجاناً</h1>
-        <p>قم برفع صورتك القديمة أو الضعيفة واحصل على نسخة واضحة ومكبرة خلال ثوانٍ</p>
+        <h1>محسن وتوضيح الصور القديمة</h1>
+        <p>ارفع صورتك القديمة وشاهد السحر تلقائياً بالذكاء الاصطناعي</p>
     </header>
 
-    <div class="main-card">
-        <!-- سيرفر شغال ومستقر جداً لتعديل الصور -->
-        <iframe src="https://randomtable-image-restoration-gfpgan.hf.space?__theme=dark"></iframe>
+    <div class="card">
+        <label for="imageInput" class="upload-btn">اختر صورة قديمة للرفع</label>
+        <input type="file" id="imageInput" accept="image/*">
+        
+        <div id="loading">جاري معالجة الصورة وتوضيحها بالذكاء الاصطناعي، يرجى الانتظار ثوانٍ...</div>
+
+        <div class="preview-container">
+            <div class="box">
+                <h3>الصورة الأصلية</h3>
+                <img id="originalPreview" src="" alt="" style="display:none;">
+            </div>
+            <div class="box">
+                <h3>الصورة بعد التوضيح</h3>
+                <img id="resultPreview" src="" alt="" style="display:none;">
+            </div>
+        </div>
     </div>
 
     <footer>
-        <p>© جميع الحقوق محفوظة - أداة معالجة الصور بالذكاء الاصطناعي</p>
+        <p>© جميع الحقوق محفوظة - نظام المعالجة التلقائي</p>
     </footer>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const originalPreview = document.getElementById('originalPreview');
+        const resultPreview = document.getElementById('resultPreview');
+        const loading = document.getElementById('loading');
+
+        imageInput.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // عرض الصورة الأصلية للمستخدم
+            originalPreview.src = URL.createObjectURL(file);
+            originalPreview.style.display = 'block';
+            resultPreview.style.display = 'none';
+            loading.style.display = 'block';
+
+            // تجهيز البيانات لإرسالها للخدمة المجانية
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                // استخدام API مجاني جاهز لمعالجة الصور
+                const response = await fetch('https://api.deepai.org/api/torch-srgan', {
+                    method: 'POST',
+                    headers: {
+                        'api-key': 'quickstart-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' // مفتاح تجريبي مجاني عام
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.output_url) {
+                    resultPreview.src = data.output_url;
+                    resultPreview.style.display = 'block';
+                } else {
+                    alert('حدث خطأ أثناء المعالجة، يرجى المحاولة مرة أخرى.');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('تعذر الاتصال بسيرفر المعالجة.');
+            } finally {
+                loading.style.display.none = 'none'; // تصحيح بسيط لإخفاء التحميل
+                loading.style.display = 'none';
+            }
+        });
+    </script>
 
 </body>
 </html>
